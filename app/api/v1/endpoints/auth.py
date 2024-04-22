@@ -9,8 +9,12 @@ CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 
 URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
+auth_string = f"{CONSUMER_KEY}:{CONSUMER_SECRET}".encode('utf-8')
+encoded_auth_string = base64.b64encode(auth_string).decode('utf-8')
+authorization_header = f"Bearer {encoded_auth_string}"
+
 headers = { 
-    'Authorization': f'Bearer {base64.encode(f"{CONSUMER_KEY}:{CONSUMER_SECRET}")}'
+    'Authorization': f'{authorization_header}'
 }
 
 

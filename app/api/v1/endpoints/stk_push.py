@@ -4,8 +4,8 @@ from datetime import datetime
 import base64
 import aiohttp
 
-from schemas.stk_push import StkPushReq
-from v1.endpoints.auth import authorize
+from app.api.schemas.stk_push import StkPushReq 
+from app.api.v1.endpoints.auth import authorize
 
 stk_router = APIRouter()
 
