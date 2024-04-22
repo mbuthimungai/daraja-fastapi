@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import os
 from datetime import datetime
 import base64
@@ -10,25 +10,20 @@ from app.api.v1.endpoints.auth import authorize
 stk_router = APIRouter()
 
 PASSKEY = os.getenv('PASSKEY')
-BUSINESS_SHORT_CODE = os.getenv('BUSINESSSHORTCODE')
+BUSINESS_SHORT_CODE = int(os.getenv('BUSINESSSHORTCODE'))
 
 payload = {
     "BusinessShortCode": BUSINESS_SHORT_CODE, 
-    "Timestamp": "20240422093918",
     "TransactionType": "CustomerPayBillOnline",        
     "PartyB": BUSINESS_SHORT_CODE,
-    "CallBackURL": "https://mydomain.com/path",
-    "AccountReference": "CompanyXLTD",    
+    "CallBackURL": "https://afea-102-217-157-178.ngrok-free.app/v1/callback/",
+    "AccountReference": "Company LTD",    
 }
-
-headers = {
-    'Content-Type': 'application/json',    
-}    
 
 URL = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
 
-@stk_router.post("/", )
-async def perform_stk_push(data: StkPushReq):
+@stk_router.post("/")
+async def perform_stk_push(data: StkPushReq):    
     payload["Amount"] = data.amount
     payload["PartyA"] = data.sender_phone_number
     payload["PhoneNumber"] = data.sender_phone_number
@@ -36,24 +31,24 @@ async def perform_stk_push(data: StkPushReq):
     
     now = datetime.now()        
     timestamp = now.strftime('%Y%m%d%H%M%S')
-    
-    # Encoding the password
-    password_encoded = base64.b64encode(f'{BUSINESS_SHORT_CODE}{PASSKEY}{timestamp}'.encode()).decode('utf-8')
+    password_string = str(BUSINESS_SHORT_CODE) + PASSKEY + timestamp
+
+    password_encoded = base64.b64encode(password_string.encode('utf-8')).decode('utf-8')
     
     payload["Password"] = password_encoded   
     payload["Timestamp"] = timestamp
     
-    response = await authorize()
-    headers["Authorization"] = f"Bearer {response['access_token']}"
-    
-    async with aiohttp.ClientSession() as async_session:
-        try:
-            async with async_session.post(url=URL, headers=headers, data=payload) as response:
+    try:
+        response = await authorize()
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {response['access_token']}"
+        }
+        async with aiohttp.ClientSession() as async_session:
+            async with async_session.post(url=URL, headers=headers, json=payload) as response:
                 response.raise_for_status()
                 return await response.json()
-        except aiohttp.ClientError as e:
-            print(f"HTTP request failed: {e}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            
-    return
+    except aiohttp.ClientError as e:
+        raise HTTPException(status_code=500, detail=f"HTTP request failed: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
