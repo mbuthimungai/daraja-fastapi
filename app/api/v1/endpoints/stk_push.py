@@ -7,6 +7,8 @@ import aiohttp
 from app.api.schemas.stk_push import StkPushReq 
 from app.api.v1.endpoints.auth import authorize
 
+
+
 stk_router = APIRouter()
 
 PASSKEY = os.getenv('PASSKEY')
@@ -16,7 +18,7 @@ payload = {
     "BusinessShortCode": BUSINESS_SHORT_CODE, 
     "TransactionType": "CustomerPayBillOnline",        
     "PartyB": BUSINESS_SHORT_CODE,
-    "CallBackURL": "https://afea-102-217-157-178.ngrok-free.app/v1/callback/",
+    "CallBackURL": "https://1e26-102-217-157-88.ngrok-free.app/v1/callback/",
     "AccountReference": "Company LTD",    
 }
 
@@ -47,7 +49,10 @@ async def perform_stk_push(data: StkPushReq):
         async with aiohttp.ClientSession() as async_session:
             async with async_session.post(url=URL, headers=headers, json=payload) as response:
                 response.raise_for_status()
-                return await response.json()
+                response_data = await response.json()
+                
+                return response_data
+            
     except aiohttp.ClientError as e:
         raise HTTPException(status_code=500, detail=f"HTTP request failed: {e}")
     except Exception as e:
