@@ -22,8 +22,7 @@ payload = {
 }
 
 headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer p9e5WJv8JrfyZ6B2ZUCnB3fBeywT'
+    'Content-Type': 'application/json',    
 }    
 
 URL = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
